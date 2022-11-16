@@ -10,7 +10,7 @@
 #define ROW 8
 #define COLUMN 8
 #define STOP_CTR 28
-#define MAX_ITER 10000
+#define MAX_ITER 16777216
 #define MUTATE 0.00001
 
 using namespace std;
@@ -130,21 +130,33 @@ Chromosome *GA(Chromosome *Population, int iteration, int size)
     {
         Parents a = selection(Population, size);
         Chromosome child = crossOver(a);
-        int magicRandom = rand()%100;
-        if(magicRandom % 2== 0)
+        int magicRandom = rand() % 100;
+        if (magicRandom % 2 == 0)
             child = mutate(child);
         nextGeneration[i] = child;
     }
     return nextGeneration;
 }
 
-int stop(Chromosome *Population, int size, int iteration)
+typedef struct
 {
-    int i;
+    int row, column;
+} Input;
+
+int stop(Chromosome *Population, int size, int iteration, Input ip[], int n)
+{
+    int i, j;
     for (i = 0; i < size; i++)
     {
         if (Population[i].fit == STOP_CTR)
+        {
+            for (j = 0; j < n; j++)
+                if (Population[i].sequence.at(ip[j].column) != ip[j].row)
+                {
+                    return 0;
+                }
             return 1;
+        }
     }
     if (MAX_ITER == iteration)
         return 1;
@@ -156,15 +168,23 @@ int main()
     srand(time(NULL));
     int size = 1000; // the size of the original population
     Chromosome *Population = generatePopulation(size);
+    int n;
+    cin >> n;
+    Input ip[8];
+    int i, j;
+    for (i = 0; i < n; i++)
+    {
+        cin >> ip[i].column;
+        cin >> ip[i].row;
+    }
     int iteration = 0;
-    while (!stop(Population, size, iteration))
+    while (!stop(Population, size, iteration, ip, n))
     {
         Population = GA(Population, iteration, size);
         iteration++;
     }
     cout << "Interation number: " << iteration << endl;
 
-    int i, j;
     for (i = 0; i < size; i++)
     {
         if (Population[i].fit == 28)
